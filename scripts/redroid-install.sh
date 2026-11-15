@@ -140,9 +140,11 @@ write_adb_key() {
         return 1
     fi
 
-    # 权限和 SELinux 标签：这两项不对，adbd 会把 key 当无效忽略
+    # 权限和属组：adbd 进程以 shell(uid 2000) 身份跑，文件必须是 root:shell 0640。
+    # 写成 root:root 时 group 不对，shell 读不到，adbd 就一直要求授权（unauthorized）。
+    # 真机上 /data/misc/adb/adb_keys 也是这个属组。
     docker exec -u 0 "$NAME" sh -c '
-        chown root:root /data/misc/adb/adb_keys
+        chown 0:2000 /data/misc/adb/adb_keys
         chmod 640 /data/misc/adb/adb_keys
         chcon u:object_r:adb_keys_file:s0 /data/misc/adb/adb_keys 2>/dev/null || true
     ' >/dev/null 2>&1
