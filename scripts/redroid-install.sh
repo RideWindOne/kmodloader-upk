@@ -52,8 +52,8 @@ conf_get() {
     [ -f "$CONF" ] || { printf '\n'; return 0; }
     awk -v k="$1" 'index($0, k "=") == 1 {
         v = substr($0, length(k) + 2)
-        if (v ~ "^\047") v = substr(v, 2)
-        if (v ~ "\047$") v = substr(v, 1, length(v) - 1)
+        while (v ~ "^\047") v = substr(v, 2)
+        while (v ~ "\047$") v = substr(v, 1, length(v) - 1)
         print v
         exit
     }' "$CONF"
@@ -118,6 +118,10 @@ write_adb_key() {
         key1="$ADB_KEY"
         log "公钥里没找到 ssh-rsa / ssh-ed25519 / ecdsa- 开头的行，按原文写入"
     fi
+    # 旧版面板会把值包上单引号再写回配置，层层叠加后 key 首字符成了 '，
+    # adbd 会把整行当无效 key 忽略。写入前把外层引号剥干净。
+    while [ "${key1#\'}" != "$key1" ]; do key1="${key1#\'}"; done
+    while [ "${key1%\'}" != "$key1" ]; do key1="${key1%\'}"; done
 
     # 容器刚 run 出来时 exec 可能还没就绪，短暂重试（只等容器可用，不等系统 boot 完成）
     i=0

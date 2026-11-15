@@ -22,6 +22,11 @@ WCONF="$DATA_DIR/ws.conf"
 WS_PORT="8001"; WS_DOMAINS="*.ug.link,*.ugdocker.link,*.ugapp.link"; WS_RADMIN="1"
 
 [ -f "$CONF" ] && while IFS='=' read -r k v; do
+    # 配置里的值一律是 printf "KEY='%s'" 写出来的，读回来要先剥掉外层单引号。
+    # 不剥的话面板 textarea 会显示成 'QAAAA…，用户再存一次就多一层引号，
+    # adb_keys 写进 redroid 后第一个字符变成单引号，adbd 直接把整行当无效 key。
+    while [ "${v#\'}" != "$v" ]; do v="${v#\'}"; done
+    while [ "${v%\'}" != "$v" ]; do v="${v%\'}"; done
     case "$k" in
         SN) SN="$v" ;;
         MAGISK) MAGISK="$v" ;;
@@ -102,6 +107,10 @@ if [ "${REQUEST_METHOD:-GET}" = "POST" ] && [ "${CONTENT_LENGTH:-0}" -gt 0 ]; th
         MAGISK="${F_MAGISK:-0}"; [ "$MAGISK" = "on" ] && MAGISK=1
         ADB_SECURE="${F_SECURE:-0}"; [ "$ADB_SECURE" = "on" ] && ADB_SECURE=1
         ADB_KEY="$F_KEY"
+        # 粘贴进来的值可能已经被上一轮多包了引号，这里剥干净再存，
+        # 否则每存一次就多一层，最后 adb_keys 首字符变成单引号
+        while [ "${ADB_KEY#\'}" != "$ADB_KEY" ]; do ADB_KEY="${ADB_KEY#\'}"; done
+        while [ "${ADB_KEY%\'}" != "$ADB_KEY" ]; do ADB_KEY="${ADB_KEY%\'}"; done
         [ -n "$F_BRAND" ] && BRAND="$F_BRAND"
         [ -n "$F_MODEL" ] && MODEL="$F_MODEL"
         [ -n "$F_DEVICE" ] && DEVICE="$F_DEVICE"
