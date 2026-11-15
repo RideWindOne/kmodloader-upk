@@ -111,17 +111,19 @@ write_adb_key() {
         log "adb 鉴权未开启（secure=$ADB_SECURE），已清除 adb_keys"
         return 0
     fi
-    # 只取真正像公钥的那一行：从面板 textarea 粘过来的内容常带换行、行尾空格，
-    # 甚至夹着说明文字，整块写进去 adbd 会当成无效 key 忽略。
-    key1="$(printf '%s' "$ADB_KEY" | tr -d '\r' | grep 'ssh-\|ecdsa-' | head -n 1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-    if [ -z "$key1" ]; then
-        key1="$ADB_KEY"
-        log "公钥里没找到 ssh-rsa / ssh-ed25519 / ecdsa- 开头的行，按原文写入"
+    # 逐行清洗后保留全部公钥行。adb_keys 是每行一把 key、adbd 逐行解析，
+    # 所以多台电脑的公钥可以一次性全部写进去（旧版 head -n 1 只留第一把，其余丢）。
+    # 清洗：去 CR、剥掉历史遗留的层层单引号、去首尾空白、丢弃说明文字行。
+    keys="$(printf '%s\n' "$ADB_KEY" | tr -d '\r' | while IFS= read -r line; do
+        while [ "${line#\'}" != "$line" ]; do line="${line#\'}"; done
+        while [ "${line%\'}" != "$line" ]; do line="${line%\'}"; done
+        line="$(printf '%s' "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        [ -n "$line" ] && printf '%s\n' "$line"
+    done | awk '($1 ~ /^(ssh-|ecdsa-|sk-)/) || ($0 ~ /^[A-Za-z0-9+\/=]+([[:space:]].*)?$/)')"
+    if [ -z "$keys" ]; then
+        keys="$(printf '%s' "$ADB_KEY" | tr -d '\r')"
+        log "公钥里没识别到标准 key 行，按原文写入"
     fi
-    # 旧版面板会把值包上单引号再写回配置，层层叠加后 key 首字符成了 '，
-    # adbd 会把整行当无效 key 忽略。写入前把外层引号剥干净。
-    while [ "${key1#\'}" != "$key1" ]; do key1="${key1#\'}"; done
-    while [ "${key1%\'}" != "$key1" ]; do key1="${key1%\'}"; done
 
     # 容器刚 run 出来时 exec 可能还没就绪，短暂重试（只等容器可用，不等系统 boot 完成）
     i=0
@@ -135,7 +137,7 @@ write_adb_key() {
     done
 
     docker exec -u 0 "$NAME" sh -c 'mkdir -p /data/misc/adb' >/dev/null 2>&1
-    if ! printf '%s\n' "$key1" | docker exec -i -u 0 "$NAME" tee /data/misc/adb/adb_keys >/dev/null 2>&1; then
+    if ! printf '%s\n' "$keys" | docker exec -i -u 0 "$NAME" tee /data/misc/adb/adb_keys >/dev/null 2>&1; then
         log "写入 /data/misc/adb/adb_keys 失败"
         return 1
     fi
@@ -157,8 +159,9 @@ write_adb_key() {
     fi
 
     # 重启生效
+    cnt="$(printf '%s\n' "$keys" | grep -c . 2>/dev/null | tr -d ' ')"
     if docker restart "$NAME" >/dev/null 2>&1; then
-        log "已写入 adb_keys 并重启 redroid 生效（鉴权开启）"
+        log "已写入 ${cnt:-1} 把公钥并重启 redroid 生效（鉴权开启）"
     else
         log "已写入 adb_keys，但重启失败，请手动执行 docker restart $NAME"
     fi
