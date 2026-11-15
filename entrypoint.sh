@@ -66,7 +66,8 @@ log "kmod-loader 启动，内核 $(uname -r)，dma_heap: [$(dma_heaps)]"
 # 伴生逻辑（原 open-fixer 容器已合并进来）：安装收尾后补 portInfo 并让 app_serv 重新注册。
 # 后台跑，不影响下面的模块巡检主循环。
 if [ -x /opt/bin/open-fixer.sh ]; then
-    /opt/bin/open-fixer.sh >>"$DATA_DIR/fixer.log" 2>&1 &
+    # 脚本自己就写 $DATA_DIR/fixer.log，这里再重定向会让每行重复两遍
+    /opt/bin/open-fixer.sh >/dev/null 2>&1 &
 fi
 
 # 常驻：每 30 秒核对一次，模块被卸载（或被别的应用抢先加载）时自动补上

@@ -52,17 +52,20 @@ write_wsconf() {
     } >"$WCONF"
 }
 
+# 值一律用单引号包住：MODEL 是三个词、ADB_KEY 的公钥行末尾还带一个 " @host"，
+# 直接 echo "ADB_KEY=$ADB_KEY" 写出去的那行，脚本 source 时会被当成
+# "临时赋值 + 执行后面的词"，赋值不保留，ADB_KEY 读回来就是空的。
 write_conf() {
     {
-        echo "SN=$SN"
-        echo "MAGISK=$MAGISK"
-        echo "ADB_SECURE=$ADB_SECURE"
+        printf "SN='%s'\n" "$SN"
+        printf "MAGISK='%s'\n" "$MAGISK"
+        printf "ADB_SECURE='%s'\n" "$ADB_SECURE"
         # 手动在 conf 里写过的 DOCKER_BASE 要保留，否则保存配置会把它丢掉
-        [ -n "${DOCKER_BASE_CONF:-}" ] && echo "DOCKER_BASE=$DOCKER_BASE_CONF"
-        echo "ADB_KEY=$ADB_KEY"
-        echo "BRAND=$BRAND"
-        echo "MODEL=$MODEL"
-        echo "DEVICE=$DEVICE"
+        [ -n "${DOCKER_BASE_CONF:-}" ] && printf "DOCKER_BASE='%s'\n" "$DOCKER_BASE_CONF"
+        printf "ADB_KEY='%s'\n" "$ADB_KEY"
+        printf "BRAND='%s'\n" "$BRAND"
+        printf "MODEL='%s'\n" "$MODEL"
+        printf "DEVICE='%s'\n" "$DEVICE"
     } >"$CONF"
 }
 

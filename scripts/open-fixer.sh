@@ -1,6 +1,10 @@
 #!/bin/sh
 # 安装收尾之后补齐 config.json 的 baseAccessInfo.portInfo，同步 .check-upk 校验清单，
 # 再重启宿主的 app_serv 让网关注册生效。原先是独立的 open-fixer 容器，现合并进主容器后台运行。
+#
+# 匹配一律用 [[:space:]]* 容忍冒号、逗号前后的空格：早期写死了 "baseAccessInfo":{，
+# UGOS 生成的是 "baseAccessInfo": { 时 sed 静默匹配不上（&& 后没有分支），
+# 表现就是"合并 open-fixer 之后不生效"。
 set -u
 
 DATA_DIR="${DATA_DIR:-/data}"
@@ -15,6 +19,26 @@ log() {
 UGBCFG=/cfg/ugb/config.json
 APPCFG=/cfg/appstore/config.json
 CHECKUPK=/cfg/appstore/.check-upk
+PORT="${KMOD_PORT:-8099}"
+PI="\"portInfo\": {\"httpsEnable\": false, \"port\": \"$PORT\", \"httpsPort\": \"\", \"urlPath\": \"\"}"
+
+# 给某个 config.json 补/改 portInfo。返回 0=改动成功，1=失败，2=没有 baseAccessInfo 字段
+patch_cfg() {
+    f="$1"; tag="$2"
+    [ -f "$f" ] || { log "$tag: 文件不存在，跳过"; return 1; }
+    if grep -q '"portInfo"' "$f"; then
+        sed -i "s|\"portInfo\"[[:space:]]*:[[:space:]]*{[^}]*}|$PI|" "$f" \
+            && log "$tag: 已更新 portInfo(port=$PORT)" || { log "$tag: 更新 portInfo 失败"; return 1; }
+    elif grep -qE '"baseAccessInfo"[[:space:]]*:[[:space:]]*\{' "$f"; then
+        sed -i "s|\"baseAccessInfo\"[[:space:]]*:[[:space:]]*{|\"baseAccessInfo\":{$PI,|" "$f" \
+            && log "$tag: 已补写 portInfo(port=$PORT)" || { log "$tag: 补写 portInfo 失败"; return 1; }
+    else
+        log "$tag: 配置里没有 baseAccessInfo 字段，跳过（格式可能变了，需人工核对）"
+        return 2
+    fi
+    grep -q '"portInfo"' "$f" || { log "$tag: 写入后仍找不到 portInfo，放弃本次重启"; return 1; }
+    return 0
+}
 
 log "open-fixer 启动，等待安装收尾（最多 70 秒）"
 
@@ -24,25 +48,24 @@ timeout 70 sh -c 'while find /cfg/ugb/config.json /cfg/appstore/config.json -new
 sleep 4
 
 patched=""
+patch_cfg "$UGBCFG" "ugb" && patched=1
 
-if [ -f "$UGBCFG" ] && ! grep -q '"portInfo"' "$UGBCFG"; then
-    sed -i 's/"baseAccessInfo":{/"baseAccessInfo":{"portInfo": {"httpsEnable": false, "port": "8099", "httpsPort": "", "urlPath": ""},/' "$UGBCFG" && log "patched-ugb"
+if patch_cfg "$APPCFG" "appstore"; then
     patched=1
-fi
-
-if [ -f "$APPCFG" ] && ! grep -q '"portInfo"' "$APPCFG"; then
-    sed -i 's/"baseAccessInfo":{/"baseAccessInfo":{"portInfo": {"httpsEnable": false, "port": "8099", "httpsPort": "", "urlPath": ""},/' "$APPCFG" && log "patched-appstore"
     # .check-upk 是 MD5 清单，不同步会被判"被篡改"并回滚成包内原版
     if [ -f "$CHECKUPK" ]; then
-        md5sum "$APPCFG" | cut -c1-32 | xargs -I{} sed -i 's/"config.json":{"hash":"[a-f0-9]*"/"config.json":{"hash":"{}"/' "$CHECKUPK" && log "synced-checkupk"
+        md5="$(md5sum "$APPCFG" | cut -c1-32)"
+        sed -i "s|\"config.json\"[[:space:]]*:[[:space:]]*{\"hash\"[[:space:]]*:[[:space:]]*\"[a-f0-9]*\"|\"config.json\":{\"hash\":\"$md5\"|" "$CHECKUPK" \
+            && log "synced-checkupk($md5)" || log "同步 .check-upk 失败（下次装包可能被判篡改）"
     else
         log "缺少 .check-upk，跳过 hash 同步"
     fi
-    patched=1
+elif [ ! -f "$CHECKUPK" ]; then
+    log "缺少 .check-upk，跳过 hash 同步"
 fi
 
 if [ -z "$patched" ]; then
-    log "portInfo 已存在，无需补写；不重启 app_serv（避免每次容器重启都动宿主服务）"
+    log "没有需要补的 portInfo；不重启 app_serv（避免每次容器重启都动宿主服务）"
     exit 0
 fi
 
