@@ -1,0 +1,12 @@
+# 构建产物与历史包（体积大，走 Release）
+build_dir/
+.tmpdata/
+.render-err.txt
+.render-test.html
+*.upk
+*.product.json
+
+# 镜像 tar 55M，构建前 docker save 生成
+rootfs_arm64/images/*.tar
+
+.DS_Store

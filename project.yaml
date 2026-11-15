@@ -1,0 +1,38 @@
+spec_version: "2.1"
+app_id: com.ridewind.kmodloader
+version: 1.0.0
+support_arch:
+  - arm64
+product_series:
+  - nasync
+supports:
+  - app
+  - pc
+is_docker_app: true
+depend_docker_version: 1.21.0.0054
+depend_fw_version: 1.13.0.0000
+port: 8099
+# 与 ws-scrcpy-web 原生包（页内显示已验证）一致：proxy_path 必须为 "/"，
+# 否则网关只静态 serve www/、永远不到容器；open_type 用 inner 才会在
+# UGOS 窗口/App 内嵌打开，而不是开新窗口或跳浏览器。
+proxy_path: /
+open_type: inner
+tag_types:
+  - utility
+i18n:
+  zh-CN:
+    name: 内核模块补全
+    description: >-
+      自动加载 binder_linux 与 rk_dma32_heap 两个内核模块，为 Android 容器（redroid）准备 binder 与 dma-buf heap。
+      安装后打开应用（NAS 地址 8099）：上半页看模块状态，每 30 秒核对一次，模块被卸载会自动补回；
+      下半页部署 Android 容器——先填 SN 与机型（品牌/型号/设备代号，SN 可一键重新生成），点“部署 / 重建 Redroid”即可，
+      模块没加载成功时不会启动容器。还能新建 ws-scrcpy-web 容器，可自定义宿主端口与域名白名单。
+      配置与日志都在 /volume1/docker/kmod-app/data。
+    author: Ride_Wind
+  en-US:
+    name: Kernel Module Loader
+    description: >-
+      Loads the binder_linux and rk_dma32_heap kernel modules that Android containers (redroid) need, and re-checks every 30 seconds so an unloaded module is put back automatically.
+      Open the app (port 8099): the top half shows module status; the bottom half deploys redroid — set SN and device model/props first, then click Deploy. The container is never started unless both modules loaded.
+      A ws-scrcpy-web container can also be created here with a custom host port and domain whitelist. Config and logs live in /volume1/docker/kmod-app/data.
+    author: Ride_Wind

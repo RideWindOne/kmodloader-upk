@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>内核模块补全</title>
+<style>
+  html,body{margin:0;padding:0;background:#111418;color:#e6e9ef;
+    font:14px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{padding:16px 18px 24px;}
+  .head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;}
+  h1{font-size:16px;font-weight:600;margin:0;}
+  .sub{color:#8b93a1;font-size:12px;margin:0 0 6px;letter-spacing:.4px;}
+  iframe{width:100%;border:0;border-radius:10px;background:#171b21;display:block;}
+  .tabs{display:flex;gap:6px;margin:10px 0 10px;flex-wrap:wrap;}
+  .tab{font-family:inherit;font-size:13px;border:0;border-radius:8px 8px 0 0;cursor:pointer;
+    padding:9px 18px;background:#1b2027;color:#8b93a1;font-weight:600;}
+  .tab.on{background:#2b6cf6;color:#fff;}
+  .pane{width:100%;border:0;border-radius:0 10px 10px 10px;background:#171b21;display:none;
+    height:calc(100vh - 190px);min-height:420px;}
+  .pane.on{display:block;}
+  button{font-family:inherit;font-size:13px;border:0;border-radius:8px;cursor:pointer;
+    padding:7px 14px;background:#2b6cf6;color:#fff;}
+  button.ghost{background:#2a3038;color:#c8cfdb;}
+  .hgroup{display:flex;gap:8px;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1>内核模块补全</h1>
+    <div class="hgroup">
+      <button id="reloadPane" type="button" class="ghost">刷新</button>
+    </div>
+  </div>
+  <div class="sub">binder_linux · rk_dma32_heap，30 秒核对一次</div>
+
+  <div class="tabs">
+    <button class="tab on" type="button" data-pane="status">运行状态</button>
+    <button class="tab" type="button" data-pane="redroid">Redroid 控制</button>
+    <button class="tab" type="button" data-pane="ws">WS 投屏容器</button>
+    <button class="tab" type="button" data-pane="logs">日志</button>
+  </div>
+
+  <iframe class="pane on" id="pane-status" src="cgi-bin/status.sh"></iframe>
+  <iframe class="pane" id="pane-redroid" data-src="cgi-bin/redroid.sh"></iframe>
+  <iframe class="pane" id="pane-ws" data-src="cgi-bin/ws.sh"></iframe>
+  <iframe class="pane" id="pane-logs" data-src="cgi-bin/logs.sh"></iframe>
+</div>
+
+<script>
+(function(){
+  // 页签切换：首次点开才加载对应 iframe，避免一次拉多份
+  var tabs = document.querySelectorAll(".tab");
+  var panes = document.querySelectorAll(".pane");
+  function activate(name){
+    for(var i=0;i<tabs.length;i++){
+      tabs[i].className = "tab" + (tabs[i].getAttribute("data-pane") === name ? " on" : "");
+    }
+    for(var j=0;j<panes.length;j++){
+      var pane = panes[j];
+      var key = pane.id.replace(/^pane-/, "");
+      var on = key === name;
+      pane.className = "pane" + (on ? " on" : "");
+      if(on && !pane.getAttribute("src")){
+        var lazy = pane.getAttribute("data-src");
+        if(lazy) pane.setAttribute("src", lazy);
+      }
+    }
+  }
+  for(var k=0;k<tabs.length;k++){
+    (function(btn){
+      btn.addEventListener("click", function(){
+        activate(btn.getAttribute("data-pane"));
+      });
+    })(tabs[k]);
+  }
+
+  // 刷新当前页签：重建 src 并带上时间戳，绕开浏览器和 CGI 缓存
+  var reloadBtn = document.getElementById("reloadPane");
+  if(reloadBtn){
+    reloadBtn.addEventListener("click", function(){
+      if(reloadBtn.disabled) return;
+      var active = document.querySelector(".tab.on");
+      var name = active ? active.getAttribute("data-pane") : "status";
+      var pane = document.getElementById("pane-" + name);
+      if(!pane) return;
+      var base = pane.getAttribute("data-src") || pane.getAttribute("src") || "";
+      if(!base) return;
+      var sep = base.indexOf("?") >= 0 ? "&" : "?";
+      pane.setAttribute("src", base + sep + "_t=" + Date.now());
+      var old = reloadBtn.textContent;
+      reloadBtn.textContent = "刷新中";
+      reloadBtn.disabled = true;
+      setTimeout(function(){
+        reloadBtn.textContent = old;
+        reloadBtn.disabled = false;
+      }, 600);
+    });
+  }
+})();
+</script>
+</body>
+</html>

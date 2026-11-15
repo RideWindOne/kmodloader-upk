@@ -1,0 +1,20 @@
+services:
+  kmod-loader:
+    image: ridewindone/ugkmodloader:dh4300plus
+    privileged: true
+    restart: unless-stopped
+    ports:
+      - "8099:8099"
+    volumes:
+      # 加载日志、状态文件与 fixer 日志，放在默认 docker 目录下的 data
+      - /volume1/docker/kmod-app/data:/data
+      # 控制页要直接 pull / 部署 redroid，因此挂宿主 docker socket
+      - /var/run/docker.sock:/var/run/docker.sock
+      # 容器自己的 /dev 看不到宿主新注册的 dma heap 节点，挂真实目录只读供状态页读取
+      - /dev/dma_heap:/host-dma-heap:ro
+      # UGOS 桌面/App 能否"点开"取决于 app_serv 是否把本应用注册进网关代理表，
+      # 而注册要求 config.json 里有 baseAccessInfo.portInfo。ugcli 在 proxy_path=/ 时
+      # 不生成该字段，重装后会退回 push gateway error: PortInfo is nil、点开即"无法访问"。
+      # 下面两处挂载供容器内的 open-fixer.sh 在装包收尾后补齐并重启 app_serv。
+      - /var/lib/ugb/com.ridewind.kmodloader:/cfg/ugb
+      - /volume1/@appstore/com.ridewind.kmodloader:/cfg/appstore
