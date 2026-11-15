@@ -1,0 +1,44 @@
+{
+  "apps": [
+    {
+      "appname": "com.ridewind.wsscrcpyweb",
+      "display_name": "安卓投屏",
+      "description": "适用机型：所有 arm64（aarch64）机型。在浏览器里投屏与控制安卓设备，基于 ws-scrcpy-web 打包为 Docker 应用，NAS 上不需要安装 Node 运行时。\n\n装好后在 UGOS 桌面或 App 里点开即用，不需要另开浏览器标签。服务端已针对 UGOS 的 iframe 嵌入做过适配：去掉 X-Frame-Options、下发 CSP frame-ancestors、校正 Host 与 Origin，因此不会白屏，也不会报 cross-origin request rejected。\n\n功能：多设备切换、画面实时同步、触控与键盘输入、设备状态显示。端口 8000。\n\n权限说明：容器需要 privileged 与 host PID，用于在配置变更后重启应用服务使其生效。首次打开可在页面内设置登录账号，也可关闭登录。",
+      "homepage_url": "https://github.com/RideWindOne/ws-scrcpy-web",
+      "updated_at": "2026-11-15",
+      "version": "0.5.11",
+      "upk_version": "0.5.11.0025",
+      "download_urls": {
+        "arm64": "https://github.com/RideWindOne/ws-scrcpy-web-upk/releases/download/v0.5.11.0025-arm64/arm64_nasync_com.ridewind.wsscrcpyweb_0.5.11.0025.upk"
+      },
+      "service_port": 8000,
+      "icon_url": "https://raw.githubusercontent.com/RideWindOne/ws-scrcpy-web-upk/main/rootfs_common/icon.png",
+      "download_count": 0,
+      "category": "media",
+      "platforms": [
+        "arm64"
+      ],
+      "post_install_note": "首次打开请在页面内设置登录账号（也可关闭登录）。应用需要 privileged 权限，用于让配置变更生效。支持所有 arm64 机型。"
+    },
+    {
+      "appname": "com.ridewind.kmodloader",
+      "display_name": "内核模块补全",
+      "description": "适用机型：仅限绿联 DH4300 Plus（aarch64）。自动加载 binder_linux 与 rk_dma32_heap 两个内核模块，为 Android 容器（redroid）准备 binder 与 dma-buf heap，让安卓容器能在 NAS 上跑起来。这两个模块是按 DH4300 Plus 的内核版本编译的，换机型无法加载。\n\n打开应用（端口 8099）分四个标签页：运行状态、Redroid 控制、WS 投屏容器、日志。模块状态每 30 秒核对一次，被卸载会自动补回；模块没加载成功时不会启动容器。\n\nRedroid 页可填写 SN 与机型（品牌 / 型号 / 设备代号，SN 支持一键重新生成）后一键部署或重建；WS 投屏页可新建 ws-scrcpy-web 容器，自定义宿主端口与域名白名单。配置与日志位于 /volume1/docker/kmod-app/data。\n\n权限说明：需要 privileged 权限与 Docker socket，用于装载内核模块和管理容器。",
+      "homepage_url": "https://github.com/RideWindOne/kmodloader-upk",
+      "updated_at": "2026-11-15",
+      "version": "1.0.0",
+      "upk_version": "1.0.0.0023",
+      "download_urls": {
+        "arm64": "https://github.com/RideWindOne/kmodloader-upk/releases/download/v1.0.0.0023/arm64_nasync_com.ridewind.kmodloader_1.0.0.0023.upk"
+      },
+      "service_port": 8099,
+      "icon_url": "https://raw.githubusercontent.com/RideWindOne/kmodloader-upk/main/rootfs_common/icon.png",
+      "download_count": 0,
+      "category": "system",
+      "platforms": [
+        "arm64"
+      ],
+      "post_install_note": "仅支持 DH4300 Plus。装好后打开应用查看模块状态；若显示未加载，点运行状态页的重试。应用需要 privileged 权限与 Docker socket。"
+    }
+  ]
+}

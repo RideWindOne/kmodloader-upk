@@ -73,6 +73,30 @@ docker pull ridewindone/ugkmodloader:dh4300plus
 | `www/` | 控制页（4 个标签页） |
 | `assets/` | `binder_linux.ko`、`rk_dma32_heap.ko` |
 | `rootfs_arm64/images/` | 镜像 tar（构建时生成，不入库） |
+| `apps.json` | UGOS 三方商店源，收录本仓库与安卓投屏两个应用 |
+
+## 三方商店源（apps.json）
+
+仓库根目录的 `apps.json` 是给 UGOS 三方应用商店用的应用源，格式来自绿联社区帖
+[tid=6529](https://club.ugnas.com/forum.php?mod=viewthread&tid=6529)，商店在「设置」里添加这个地址即可：
+
+```
+https://raw.githubusercontent.com/RideWindOne/kmodloader-upk/main/apps.json
+```
+
+收录两个应用：
+
+| 应用 | app_id | upk_version | 端口 | 适用机型 |
+|---|---|---|---|---|
+| 安卓投屏 | `com.ridewind.wsscrcpyweb` | 0.5.11.0025 | 8000 | 所有 arm64 |
+| 内核模块补全 | `com.ridewind.kmodloader` | 1.0.0.0023 | 8099 | 仅 DH4300 Plus |
+
+维护要点：
+
+- `appname` 必须与包内 `project.yaml` 的 `app_id` 完全一致，商店安装时会解析 upk 内的 appId 比对，不一致直接拒绝；
+- `upk_version` 是四段 `x.y.z.构建号`，也是更新判定的唯一依据——发新版忘了调大，商店就看不到更新；
+- `platforms` 目前只有 `arm64`（amd64 镜像尚未构建），标全平台会让 x86 机型装上后跑不起来；
+- 内核模块是按 DH4300 Plus 的内核版本编译的，换机型无法加载，这条写在 `description` 与 `post_install_note` 里。
 
 ## 踩过的坑
 
