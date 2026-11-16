@@ -3,7 +3,7 @@
     {
       "appname": "com.ridewind.wsscrcpyweb",
       "display_name": "安卓投屏",
-      "description": "适用机型：所有 arm64（aarch64）机型。在浏览器里投屏与控制安卓设备，基于 ws-scrcpy-web 打包为 Docker 应用，NAS 上不需要安装 Node 运行时。\n\n装好后在 UGOS 桌面或 App 里点开即用，不会白屏，也不会报 cross-origin request rejected（具体原理见下方「打开方式说明」）。\n\n功能：多设备切换、画面实时同步、触控与键盘输入、设备状态显示。端口 8000。\n\n权限说明：容器需要 privileged 与 host PID，用于在配置变更后重启应用服务使其生效。首次打开可在页面内设置登录账号，也可关闭登录。\n\n打开方式说明：应用使用系统内置的页内（inner）打开方式，点开就在 UGOS 桌面或 App 的内嵌窗口里加载，不另开浏览器标签。内嵌窗口要能显示，靠的是应用自身调整 HTTP 响应头——去掉 X-Frame-Options、下发 CSP frame-ancestors、校正 Host 与 Origin，这一步只作用于自己的响应，不碰系统文件。\n\nopen fixer 说明（系统文件改动只在这里）：容器启动后会在后台做一次幂等修补——① 写入 UGOS 的系统应用配置文件 /var/lib/ugb/com.ridewind.wsscrcpyweb/config.json 与 /volume1/@appstore/com.ridewind.wsscrcpyweb/config.json 里的 baseAccessInfo.portInfo（端口 8000、httpsEnable 关闭、httpsPort 与 urlPath 清空）；这是应用中心的端口注册和外部访问链接能生效的前提，缺了会报网关注册失败。② 改完同步 /volume1/@appstore/com.ridewind.wsscrcpyweb/.check-upk 里记录的 md5，不同步的话下次装包会被判成文件被篡改。以上两项只在检测到配置不一致时才写入，且只有 portInfo 真的发生变化时，才会通过 nsenter 进入宿主 PID 1 执行 systemctl restart app_serv.service 让网关注册生效；配置没变就不动宿主服务。",
+      "description": "适用机型：所有 arm64（aarch64）机型。在浏览器里投屏与控制安卓设备，基于 ws-scrcpy-web 打包为 Docker 应用，NAS 上不需要安装 Node 运行时。\n\n装好后在 UGOS 桌面或 App 里点开即用，不会白屏，也不会报 cross-origin request rejected（具体原理见下方「打开方式说明」）。\n\n功能：多设备切换、画面实时同步、触控与键盘输入、设备状态显示。端口 8000。\n\n权限说明：容器需要 privileged 与 host PID，用于在配置变更后重启应用服务使其生效。首次打开可在页面内设置登录账号，也可关闭登录。\n\n打开方式说明：应用使用系统内置的页内（inner）打开方式，点开就在 UGOS 桌面或 App 的内嵌窗口里加载，不另开浏览器标签。内嵌窗口要能显示，靠的是应用自身调整 HTTP 响应头——去掉 X-Frame-Options、下发 CSP frame-ancestors、校正 Host 与 Origin，这一步只作用于自己的响应，不碰系统文件。\n\nopen fixer 说明（不改任何系统文件，只在必要时重启系统服务）：容器启动后会在后台做一次幂等修补——① 写入本应用自己的配置文件 /var/lib/ugb/com.ridewind.wsscrcpyweb/config.json 与 /volume1/@appstore/com.ridewind.wsscrcpyweb/config.json 里的 baseAccessInfo.portInfo（端口 8000、httpsEnable 关闭、httpsPort 与 urlPath 清空）。这两个文件都在应用自己的目录里，不是 NAS 的系统文件；写它是为了让应用中心的端口注册与外部访问链接生效，缺了会报网关注册失败。② 改完同步 /volume1/@appstore/com.ridewind.wsscrcpyweb/.check-upk 里记录的 md5——同样是应用目录内的校验清单，不同步的话下次装包会被判成文件被篡改。以上只在检测到配置不一致时才写入。唯一的系统级动作是：portInfo 真的发生变化后，通过 nsenter 进入宿主 PID 1 执行 systemctl restart app_serv.service，让 UGOS 的应用管理服务重新读取配置、注册端口；配置没变就不重启。除此之外不替换系统二进制、不修改 /etc、不写入任何系统目录。",
       "homepage_url": "https://github.com/RideWindOne/ws-scrcpy-web",
       "updated_at": "2026-11-16",
       "version": "0.5.11",
@@ -28,21 +28,23 @@
       ],
       "app_type": "docker",
       "open_fixer": {
-        "summary": "启动后在后台补齐 UGOS 系统侧的应用配置（portInfo 与 .check-upk），保证端口注册与外部访问生效。",
-        "touches_system_config": true,
+        "summary": "启动后在后台补齐本应用自己的两份配置（portInfo 与 .check-upk），不改系统文件；仅在端口变化时重启系统服务 app_serv。",
         "targets": [
           "/var/lib/ugb/com.ridewind.wsscrcpyweb/config.json — 写入 baseAccessInfo.portInfo（port 8000 / httpsEnable false / httpsPort 空 / urlPath 空）",
           "/volume1/@appstore/com.ridewind.wsscrcpyweb/config.json — 同上",
           "/volume1/@appstore/com.ridewind.wsscrcpyweb/.check-upk — 改动后同步 md5，避免下次装包被判篡改"
         ],
         "restarts_service": "仅在 portInfo 实际发生变化时，通过 nsenter 进入宿主 PID 1 执行 systemctl restart app_serv.service；无变化则不重启",
-        "idempotent": true
+        "idempotent": true,
+        "touches_system_files": false,
+        "touches_app_config": true,
+        "restarts_system_service": "仅在 portInfo 发生变化时执行 systemctl restart app_serv.service（重启 UGOS 应用管理服务，结束即完成）；不改任何系统文件时不动它"
       }
     },
     {
       "appname": "com.ridewind.kmodloader",
       "display_name": "内核模块补全",
-      "description": "适用机型：仅限绿联 DH4300 Plus（aarch64）。自动加载 binder_linux 与 rk_dma32_heap 两个内核模块，为 Android 容器（redroid）准备 binder 与 dma-buf heap，让安卓容器能在 NAS 上跑起来。这两个模块是按 DH4300 Plus 的内核版本编译的，换机型无法加载。\n\n打开应用（端口 8099）分四个标签页：运行状态、Redroid 控制、WS 投屏容器、日志。模块状态每 30 秒核对一次，被卸载会自动补回；模块没加载成功时不会启动容器。\n\nRedroid 页可填写 SN 与机型（品牌 / 型号 / 设备代号，SN 支持一键重新生成）后一键部署或重建；WS 投屏页可新建 ws-scrcpy-web 容器，自定义宿主端口与域名白名单。配置与日志位于 /volume1/docker/kmod-app/data。\n\n权限说明：需要 privileged 权限与 Docker socket，用于装载内核模块和管理容器。\n\n打开方式说明：应用使用系统内置的页内（inner）打开方式，点开就在 UGOS 桌面或 App 的内嵌窗口里加载，不另开浏览器标签；内嵌靠应用自身调整响应头（去掉 X-Frame-Options、下发 CSP frame-ancestors），不替换系统二进制、不修改系统服务。\n\nopen fixer 说明（这是唯一会写入系统配置的地方）：容器启动后会在后台做一次幂等修补——① 写入 UGOS 的系统应用配置文件 /var/lib/ugb/com.ridewind.kmodloader/config.json 与 /volume1/@appstore/com.ridewind.kmodloader/config.json 里的 baseAccessInfo.portInfo（端口 8099、httpsEnable 关闭、httpsPort 与 urlPath 清空）；这是应用中心端口注册和外部访问链接生效的前提，缺了会报网关注册失败。② 改完同步 /volume1/@appstore/com.ridewind.kmodloader/.check-upk 里记录的 md5，不同步的话下次装包会被判成文件被篡改。以上只在检测到配置不一致时才写入，且只有 portInfo 真的发生变化时，才会通过 nsenter 进入宿主 PID 1 执行 systemctl restart app_serv.service；配置没变就不动宿主服务。",
+      "description": "适用机型：仅限绿联 DH4300 Plus（aarch64）。自动加载 binder_linux 与 rk_dma32_heap 两个内核模块，为 Android 容器（redroid）准备 binder 与 dma-buf heap，让安卓容器能在 NAS 上跑起来。这两个模块是按 DH4300 Plus 的内核版本编译的，换机型无法加载。\n\n打开应用（端口 8099）分四个标签页：运行状态、Redroid 控制、WS 投屏容器、日志。模块状态每 30 秒核对一次，被卸载会自动补回；模块没加载成功时不会启动容器。\n\nRedroid 页可填写 SN 与机型（品牌 / 型号 / 设备代号，SN 支持一键重新生成）后一键部署或重建；WS 投屏页可新建 ws-scrcpy-web 容器，自定义宿主端口与域名白名单。配置与日志位于 /volume1/docker/kmod-app/data。\n\n权限说明：需要 privileged 权限与 Docker socket，用于装载内核模块和管理容器。\n\n打开方式说明：应用使用系统内置的页内（inner）打开方式，点开就在 UGOS 桌面或 App 的内嵌窗口里加载，不另开浏览器标签；内嵌靠应用自身调整响应头（去掉 X-Frame-Options、下发 CSP frame-ancestors），不替换系统二进制、不修改系统服务。\n\nopen fixer 说明（不改任何系统文件，只在必要时重启系统服务）：容器启动后会在后台做一次幂等修补——① 写入本应用自己的配置文件 /var/lib/ugb/com.ridewind.kmodloader/config.json 与 /volume1/@appstore/com.ridewind.kmodloader/config.json 里的 baseAccessInfo.portInfo（端口 8099、httpsEnable 关闭、httpsPort 与 urlPath 清空）。这两个文件都在应用自己的目录里，不是 NAS 的系统文件；写它是为了让应用中心的端口注册与外部访问链接生效，缺了会报网关注册失败。② 改完同步 /volume1/@appstore/com.ridewind.kmodloader/.check-upk 里记录的 md5——同样是应用目录内的校验清单，不同步的话下次装包会被判成文件被篡改。以上只在检测到配置不一致时才写入。唯一的系统级动作是：portInfo 真的发生变化后，通过 nsenter 进入宿主 PID 1 执行 systemctl restart app_serv.service，让 UGOS 的应用管理服务重新读取配置、注册端口；配置没变就不重启。除此之外不替换系统二进制、不修改 /etc、不写入任何系统目录。",
       "homepage_url": "https://github.com/RideWindOne/kmodloader-upk",
       "updated_at": "2026-11-16",
       "version": "1.0.0",
@@ -67,15 +69,17 @@
       ],
       "app_type": "docker",
       "open_fixer": {
-        "summary": "启动后在后台补齐 UGOS 系统侧的应用配置，保证端口注册与外部访问生效。",
-        "touches_system_config": true,
+        "summary": "启动后在后台补齐本应用自己的两份配置（portInfo 与 .check-upk），不改系统文件；仅在端口变化时重启系统服务 app_serv。",
         "targets": [
           "/var/lib/ugb/com.ridewind.kmodloader/config.json — 写入 baseAccessInfo.portInfo（port 8099 / httpsEnable false / httpsPort 空 / urlPath 空）",
           "/volume1/@appstore/com.ridewind.kmodloader/config.json — 同上",
           "/volume1/@appstore/com.ridewind.kmodloader/.check-upk — 改动后同步 md5，避免下次装包被判篡改"
         ],
         "restarts_service": "仅在 portInfo 实际发生变化时，通过 nsenter 进入宿主 PID 1 执行 systemctl restart app_serv.service；无变化则不重启",
-        "idempotent": true
+        "idempotent": true,
+        "touches_system_files": false,
+        "touches_app_config": true,
+        "restarts_system_service": "仅在 portInfo 发生变化时执行 systemctl restart app_serv.service（重启 UGOS 应用管理服务，结束即完成）；不改任何系统文件时不动它"
       }
     }
   ]
