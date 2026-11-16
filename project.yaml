@@ -17,6 +17,19 @@ port: 8099
 # UGOS 窗口/App 内嵌打开，而不是开新窗口或跳浏览器。
 proxy_path: /
 open_type: inner
+# 安装时让用户选择存放配置与日志的共享文件夹；留空则沿用默认的
+# /volume1/docker/kmod-app/data。第三方商店据此弹选择框。
+parameters:
+  - key: DATA_PATH
+    type: path
+    required: true
+    i18n:
+      zh-CN:
+        name: 数据目录
+        description: 选择存放配置、日志与状态文件的共享文件夹；留空则使用默认目录 /volume1/docker/kmod-app/data。
+      en-US:
+        name: Data directory
+        description: Folder for config, logs and state files. Leave empty to use /volume1/docker/kmod-app/data.
 tag_types:
   - utility
 i18n:
