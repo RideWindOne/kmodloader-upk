@@ -19,17 +19,24 @@ heaps="$(printf '%s' "$heaps" | tr '\n' ' ')"
 logtail="$(tail -n 8 /data/kmod.log 2>/dev/null | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')"
 [ -z "$logtail" ] && logtail="（暂无日志）"
 
-# /data 的真实宿主目录。容器已挂宿主 docker socket，直接问 docker 拿自己的挂载源，
+# 真实宿主目录。容器已挂宿主 docker socket，直接问 docker 拿自己的挂载源，
 # 这样得到的是完整宿主路径（/data 常是 btrfs 子卷里的 bind mount，mountinfo 的 root
 # 字段只有相对部分，会丢掉 /volume1 这类上级挂载点）。
+# 安装参数选了共享文件夹时数据在 /user-data，否则在固定兜底的 /data，两个都要查。
 data_src=""
 cid="$(cat /etc/hostname 2>/dev/null)"
 if [ -n "$cid" ] && [ -S /var/run/docker.sock ]; then
-    data_src="$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Source}}{{end}}{{end}}' "$cid" 2>/dev/null)"
+    for dst in /user-data /data; do
+        src="$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "'"$dst"'"}}{{.Source}}{{end}}{{end}}' "$cid" 2>/dev/null)"
+        if [ -n "$src" ]; then
+            data_src="$src"
+            break
+        fi
+    done
 fi
 if [ -n "$data_src" ]; then
     data_hint="$(printf '日志位置 %s/kmod.log' "$data_src" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')"
-elif awk '$5 == "/data" { found = 1 } END { exit !found }' /proc/self/mountinfo 2>/dev/null; then
+elif awk '$5 == "/user-data" || $5 == "/data" { found = 1 } END { exit !found }' /proc/self/mountinfo 2>/dev/null; then
     data_hint="数据目录已挂载（宿主路径不可见）"
 else
     data_hint="未选择数据目录，日志在容器内层，重启会丢失"

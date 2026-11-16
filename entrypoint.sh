@@ -1,7 +1,15 @@
 #!/bin/sh
 set -u
 
-DATA_DIR="${DATA_DIR:-/data}"
+# 数据目录：安装参数选了共享文件夹时 compose 会多挂 /user-data，优先用它；
+# 没选（参数留空）则用固定挂载的 /data。两条都不存在时 mkdir 兜底。
+if [ -n "${DATA_DIR:-}" ]; then
+    :
+elif [ -d /user-data ]; then
+    DATA_DIR=/user-data
+else
+    DATA_DIR=/data
+fi
 mkdir -p "$DATA_DIR" 2>/dev/null || true
 LOG="$DATA_DIR/kmod.log"
 STATE="$DATA_DIR/kmod.state"

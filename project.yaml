@@ -22,14 +22,14 @@ open_type: inner
 parameters:
   - key: DATA_PATH
     type: path
-    required: true
+    required: false
     i18n:
       zh-CN:
         name: 数据目录
-        description: 选择存放配置、日志与状态文件的共享文件夹；不选则使用默认目录 /volume1/docker/kmod-app/data。注意：不选择时数据只写在容器内层，容器重建会丢失。
+        description: 可选：把配置、日志与状态文件放到别的共享文件夹。留空则使用默认目录 /volume1/docker/kmod-app/data，数据不会丢。
       en-US:
         name: Data directory
-        description: Folder for config, logs and state files. If left empty, the default /volume1/docker/kmod-app/data is used only when it is bind-mounted; otherwise data lives inside the container and is lost on recreation.
+        description: Optional. Store config, logs and state files in another shared folder. If left empty, the default /volume1/docker/kmod-app/data is used and data is kept.
 tag_types:
   - utility
 i18n:
