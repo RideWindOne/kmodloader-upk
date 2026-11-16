@@ -7,9 +7,9 @@
       "homepage_url": "https://github.com/RideWindOne/ws-scrcpy-web",
       "updated_at": "2026-11-15",
       "version": "0.5.11",
-      "upk_version": "0.5.11.0025",
+      "upk_version": "0.5.11.0027",
       "download_urls": {
-        "arm64": "https://github.com/RideWindOne/ws-scrcpy-web-upk/releases/download/v0.5.11.0025-arm64/arm64_nasync_com.ridewind.wsscrcpyweb_0.5.11.0025.upk"
+        "arm64": "https://github.com/RideWindOne/ws-scrcpy-web-upk/releases/download/v0.5.11.0027-arm64/arm64_nasync_com.ridewind.wsscrcpyweb_0.5.11.0027.upk"
       },
       "service_port": 8000,
       "icon_url": "https://raw.githubusercontent.com/RideWindOne/ws-scrcpy-web-upk/main/rootfs_common/icon.png",
@@ -18,7 +18,14 @@
       "platforms": [
         "arm64"
       ],
-      "post_install_note": "首次打开请在页面内设置登录账号（也可关闭登录）。应用需要 privileged 权限，用于让配置变更生效。支持所有 arm64 机型。"
+      "post_install_note": "安装时请选择数据目录（升级要选回原来的 /volume1/docker/wsdata，否则设备列表与配置不沿用）。首次打开若提示未连接设备，先在设备上开启 adb 并把公钥加进 redroid 的 adb_keys。",
+      "install_params": [
+        {
+          "key": "DATA_PATH",
+          "name": "数据目录",
+          "description": "选择存放投屏数据库、配置与 ADB 密钥的共享文件夹。升级安装请选回原来的目录（默认 /volume1/docker/wsdata），否则已有设备列表与配置不会沿用。"
+        }
+      ]
     },
     {
       "appname": "com.ridewind.kmodloader",
@@ -27,9 +34,9 @@
       "homepage_url": "https://github.com/RideWindOne/kmodloader-upk",
       "updated_at": "2026-11-15",
       "version": "1.0.0",
-      "upk_version": "1.0.0.0031",
+      "upk_version": "1.0.0.0032",
       "download_urls": {
-        "arm64": "https://github.com/RideWindOne/kmodloader-upk/releases/download/v1.0.0.0031/arm64_nasync_com.ridewind.kmodloader_1.0.0.0031.upk"
+        "arm64": "https://github.com/RideWindOne/kmodloader-upk/releases/download/v1.0.0.0032/arm64_nasync_com.ridewind.kmodloader_1.0.0.0032.upk"
       },
       "service_port": 8099,
       "icon_url": "https://raw.githubusercontent.com/RideWindOne/kmodloader-upk/main/rootfs_common/icon.png",

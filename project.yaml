@@ -17,7 +17,7 @@ port: 8099
 # UGOS 窗口/App 内嵌打开，而不是开新窗口或跳浏览器。
 proxy_path: /
 open_type: inner
-# 安装时让用户选择存放配置与日志的共享文件夹；留空则沿用默认的
+# 安装时让用户选择存放配置与日志的共享文件夹；未选择时沿用默认的
 # /volume1/docker/kmod-app/data。第三方商店据此弹选择框。
 parameters:
   - key: DATA_PATH
@@ -26,10 +26,10 @@ parameters:
     i18n:
       zh-CN:
         name: 数据目录
-        description: 选择存放配置、日志与状态文件的共享文件夹；留空则使用默认目录 /volume1/docker/kmod-app/data。
+        description: 选择存放配置、日志与状态文件的共享文件夹；不选则使用默认目录 /volume1/docker/kmod-app/data。注意：不选择时数据只写在容器内层，容器重建会丢失。
       en-US:
         name: Data directory
-        description: Folder for config, logs and state files. Leave empty to use /volume1/docker/kmod-app/data.
+        description: Folder for config, logs and state files. If left empty, the default /volume1/docker/kmod-app/data is used only when it is bind-mounted; otherwise data lives inside the container and is lost on recreation.
 tag_types:
   - utility
 i18n:
@@ -47,5 +47,5 @@ i18n:
     description: >-
       Loads the binder_linux and rk_dma32_heap kernel modules that Android containers (redroid) need, and re-checks every 30 seconds so an unloaded module is put back automatically.
       Open the app (port 8099): the top half shows module status; the bottom half deploys redroid — set SN and device model/props first, then click Deploy. The container is never started unless both modules loaded.
-      A ws-scrcpy-web container can also be created here with a custom host port and domain whitelist. Config and logs live in /volume1/docker/kmod-app/data.
+      A ws-scrcpy-web container can also be created here with a custom host port and domain whitelist. Config and logs are written to the shared folder chosen at install time (the status page shows the real host path); the default is /volume1/docker/kmod-app/data.
     author: Ride_Wind

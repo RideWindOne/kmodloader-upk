@@ -19,6 +19,15 @@ heaps="$(printf '%s' "$heaps" | tr '\n' ' ')"
 logtail="$(tail -n 8 /data/kmod.log 2>/dev/null | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')"
 [ -z "$logtail" ] && logtail="（暂无日志）"
 
+# /data 的真实宿主目录：容器里是 bind mount，mountinfo 第 4 字段就是宿主源路径。
+# 没探测到说明安装时没选数据目录，/data 只是容器内层，重启即丢。
+data_src="$(awk '$5 == "/data" { print $4; exit }' /proc/self/mountinfo 2>/dev/null)"
+if [ -n "$data_src" ]; then
+    data_hint="$(printf '日志位置 %s/kmod.log' "$data_src" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')"
+else
+    data_hint="未选择数据目录，日志在容器内层，重启会丢失"
+fi
+
 cat <<EOF
 <!DOCTYPE html>
 <html lang="zh-CN"><head>
@@ -43,6 +52,6 @@ cat <<EOF
   <tr><td class="k">/dev/dma_heap</td><td>$heaps</td></tr>
 </table>
 <div class="log">$logtail</div>
-<div class="foot">每 5 秒自动刷新 · 日志持久化在 /volume1/docker/kmod-app/data/kmod.log</div>
+<div class="foot">每 5 秒自动刷新 · $data_hint</div>
 </body></html>
 EOF
