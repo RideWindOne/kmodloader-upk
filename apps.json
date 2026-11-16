@@ -34,9 +34,9 @@
       "homepage_url": "https://github.com/RideWindOne/kmodloader-upk",
       "updated_at": "2026-11-15",
       "version": "1.0.0",
-      "upk_version": "1.0.0.0032",
+      "upk_version": "1.0.0.0033",
       "download_urls": {
-        "arm64": "https://github.com/RideWindOne/kmodloader-upk/releases/download/v1.0.0.0032/arm64_nasync_com.ridewind.kmodloader_1.0.0.0032.upk"
+        "arm64": "https://github.com/RideWindOne/kmodloader-upk/releases/download/v1.0.0.0033/arm64_nasync_com.ridewind.kmodloader_1.0.0.0033.upk"
       },
       "service_port": 8099,
       "icon_url": "https://raw.githubusercontent.com/RideWindOne/kmodloader-upk/main/rootfs_common/icon.png",
