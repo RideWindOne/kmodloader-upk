@@ -87,12 +87,12 @@
       "display_name": "内网浏览器",
       "description": "适用机型：所有 arm64（aarch64）与 amd64（x86-64）机型。装在 NAS 上，用手机通过 UGREENlink 在外网打开 NAS 所在局域网里的任意设备后台——路由、NAS、摄像头等。\n\n页面直接在你自己的浏览器里渲染，不起远端桌面、不转发视频流；代理由 NAS 上的本应用完成，HTML/CSS/JS 里的地址逐条改写，配合 Service Worker 把飞牛这类 SPA 的干净路径透明转发到代理前缀，登录后的跳转、动态 import 都不会 404。\n\n功能：多标签并排、地址栏完整 URL 回填、收藏与浏览历史（可单条删除）、登录态在 NAS 上持久保存（升级不掉线）、每个网页应用可单独勾选「访问电脑版」、内置虚拟鼠标、缩放（− 倍率 + 还原）、横屏、一键切代理、沉浸查看（隐藏地址栏与标签栏，右上角小胶囊收回）。端口 21010。\n\n权限说明：只申请 NETWORK.ACCESS_INTERNET（出站访问内网设备）。不加载内核模块、不碰 Docker、不修改任何系统文件；数据都在应用自己的 shared/persist 目录里。",
       "homepage_url": "https://github.com/RideWindOne/nas-web-gateway-upk",
-      "updated_at": "2026-11-17",
+      "updated_at": "2026-11-18",
       "version": "0.1.0",
-      "upk_version": "0.1.0.0054",
+      "upk_version": "0.1.0.0056",
       "download_urls": {
-        "arm64": "https://github.com/RideWindOne/nas-web-gateway-upk/releases/download/v0.1.0.0054/arm64_nasync_com.ridewind.naswebgateway_0.1.0.0054.upk",
-        "amd64": "https://github.com/RideWindOne/nas-web-gateway-upk/releases/download/v0.1.0.0054/amd64_nasync_com.ridewind.naswebgateway_0.1.0.0054.upk"
+        "arm64": "https://github.com/RideWindOne/nas-web-gateway-upk/releases/download/v0.1.0.0056/arm64_nasync_com.ridewind.naswebgateway_0.1.0.0056.upk",
+        "amd64": "https://github.com/RideWindOne/nas-web-gateway-upk/releases/download/v0.1.0.0056/amd64_nasync_com.ridewind.naswebgateway_0.1.0.0056.upk"
       },
       "service_port": 21010,
       "icon_url": "https://raw.githubusercontent.com/RideWindOne/nas-web-gateway-upk/main/rootfs_common/icon.png",
