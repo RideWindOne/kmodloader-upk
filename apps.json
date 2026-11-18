@@ -89,10 +89,10 @@
       "homepage_url": "https://github.com/RideWindOne/nas-web-gateway-upk",
       "updated_at": "2026-11-18",
       "version": "0.1.0",
-      "upk_version": "0.1.0.0059",
+      "upk_version": "0.1.0.0076",
       "download_urls": {
-        "arm64": "https://github.com/RideWindOne/nas-web-gateway-upk/releases/download/v0.1.0.0059/arm64_nasync_com.ridewind.naswebgateway_0.1.0.0059.upk",
-        "amd64": "https://github.com/RideWindOne/nas-web-gateway-upk/releases/download/v0.1.0.0059/amd64_nasync_com.ridewind.naswebgateway_0.1.0.0059.upk"
+        "arm64": "https://github.com/RideWindOne/nas-web-gateway-upk/releases/download/v0.1.0.0076/arm64_nasync_com.ridewind.naswebgateway_0.1.0.0076.upk",
+        "amd64": "https://github.com/RideWindOne/nas-web-gateway-upk/releases/download/v0.1.0.0076/amd64_nasync_com.ridewind.naswebgateway_0.1.0.0076.upk"
       },
       "service_port": 21010,
       "icon_url": "https://raw.githubusercontent.com/RideWindOne/nas-web-gateway-upk/main/rootfs_common/icon.png",
